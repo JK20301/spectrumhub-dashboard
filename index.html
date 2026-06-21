@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>스펙트럼허브 인스타 대시보드</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{ color-scheme: light;
+  --bg:#f6f7fb; --card:#ffffff; --ink:#1c2230; --sub:#6b7280; --line:#e6e8f0;
+  --brand:#6c5ce7; --teal:#06b6a4; --amber:#f59e0b; --red:#ef4444; --green:#22a06b;
+  --fire:#ff5a36; --shadow:0 1px 3px rgba(20,24,40,.06),0 6px 20px rgba(20,24,40,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;line-height:1.5;padding:20px}
+.wrap{max-width:1100px;margin:0 auto}
+header.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:14px}
+h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.3px}
+.muted{color:var(--sub);font-size:12.5px}
+.grid{display:grid;gap:14px;margin-bottom:14px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.cards2{grid-template-columns:1fr 1fr}
+.cols{grid-template-columns:1.4fr .6fr}
+@media(max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}.cards2,.cols{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.card h2{font-size:13px;margin:0 0 10px;color:#374151}
+.kpi .v{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.kpi .l{font-size:12px;color:var(--sub);margin-top:2px}
+.kpi .s{font-size:11.5px;color:var(--teal);margin-top:3px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--sub);font-weight:600;font-size:11.5px;white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.topic{font-size:12px}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.fire{background:#fff0ec;color:var(--fire)} .green{background:#e7f6ef;color:var(--green)}
+.amber{background:#fff7e6;color:#b4790c} .red{background:#fdecec;color:var(--red)}
+.formula{display:flex;gap:8px;align-items:flex-start;font-size:12.7px;margin:6px 0}
+.ok{color:var(--green)} .no{color:var(--red)}
+.legend{font-size:11.5px;color:var(--sub);margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chartbox{position:relative;height:200px}
+.note{font-size:11.5px;color:var(--sub);margin-top:10px}
+.foot{margin:16px 2px 4px;font-size:11.5px;color:var(--sub)}
+.hl{background:#fff7e6;border:1px solid #ffe2ad;color:#7a5200;border-radius:10px;padding:10px 12px;font-size:12.7px;margin-bottom:14px}
+b.k{color:var(--brand)}
+/* accordion */
+.acc{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.acc>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;gap:10px;align-items:center;font-size:12.8px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary .when{flex:0 0 78px;font-weight:700;color:#374151}
+.acc>summary .tag{flex:0 0 auto;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;background:#eef0fb;color:var(--brand)}
+.acc>summary .chev{margin-left:auto;color:var(--sub);font-size:11px}
+.acc[open]>summary{background:#fafbff;border-bottom:1px solid var(--line)}
+.acc .body{padding:11px 13px;font-size:12.4px;background:#fff}
+.acc .body .cap{white-space:pre-wrap;background:#f8f9fc;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:6px;color:#2a3040;max-height:230px;overflow:auto}
+.k2{font-weight:700;color:#374151}
+/* kanban */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:860px){.kanban{grid-template-columns:1fr}}
+.kcol{background:#fafbff;border:1px solid var(--line);border-radius:10px;padding:9px}
+.kcol h3{font-size:11.5px;margin:2px 4px 8px;color:#4b5563;display:flex;justify-content:space-between}
+.kitem{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:11.8px;margin-bottom:7px;box-shadow:0 1px 2px rgba(20,24,40,.04)}
+.kitem .m{color:var(--sub);font-size:10.5px;margin-top:2px}
+/* competitor post cards */
+.ccard{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px;background:#fff;transition:.15s}
+.ccard:hover{border-color:var(--brand);box-shadow:0 2px 10px rgba(108,92,231,.12);transform:translateY(-1px)}
+.cc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11.5px}
+.cc-acct{font-weight:800;color:var(--brand)}
+.cc-stat{color:var(--sub);font-variant-numeric:tabular-nums}
+.cc-title{font-size:12.6px;font-weight:600;margin:3px 0}
+.cc-eff{font-size:11.6px;color:#4b5563}
+.cc-go{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;color:var(--brand)}
+.b-use{background:#e7f6ef;color:var(--green);border-radius:5px;padding:0 5px;font-size:10px;font-weight:700}
+.b-anti{background:#fdecec;color:var(--red);border-radius:5px;padding:0 5px;font-size:10px;font-weight:700}
+.kdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>📊 스펙트럼허브 인스타 대시보드</h1>
+      <div class="muted">@official_spectrumhub · 기준일 <b>2026-06-20 (토)</b> · 데이터: history.md 실측(Apify) · 자동 일일 갱신</div>
+    </div>
+    <div class="muted">엔진: <b class="k">공감/제도 훅 + 4지선다 CTA + 릴스</b></div>
+  </header>
+
+  <div class="grid kpis">
+    <div class="card kpi"><div class="v">3,348</div><div class="l">총 팔로워 (6/20 기준)</div><div class="s">5월(~2,250) 대비 +약1,100</div></div>
+    <div class="card kpi"><div class="v">34</div><div class="l">누적 게시물</div><div class="s">6월 #30~#34</div></div>
+    <div class="card kpi"><div class="v">967</div><div class="l">최고 댓글 (#30 제도 입문)</div><div class="s">역대 1위·롱테일</div></div>
+    <div class="card kpi"><div class="v">922</div><div class="l">최고 좋아요 (#26 도전행동+법)</div><div class="s">바이럴 · 재생 17만</div></div>
+  </div>
+
+  <div class="hl">🔴 <b>지금 가장 급한 것</b> — 6/17 예정 🎁 무료 체크리스트 배부 릴스 미발행(국내 3계정 교차검증 최강 댓글·저장 레버). 자료집 만들어 릴스+참여게이트로 발행 권장.</div>
+
+  <!-- 추이 + 주제믹스 -->
+  <div class="grid cards2">
+    <div class="card">
+      <h2>👥 총 팔로워 수 (매일 기록)</h2>
+      <div class="chartbox"><canvas id="foll"></canvas></div>
+      <div class="note">오늘(6/20) 총 <b>3,348명</b>. 오늘부터 매일 그날 총 팔로워를 한 점씩 누적 기록 → 날짜별 증가량이 점점 선에 나타납니다(점에 올리면 ‘직전 대비 +N명’). ※ 5/31~6/19 사이는 소급 수집 불가라 앵커 2점만.</div>
+    </div>
+    <div class="card">
+      <h2>🎯 권장 주제 믹스</h2>
+      <div class="chartbox"><canvas id="mix"></canvas></div>
+      <div class="legend" id="mixLegend"></div>
+    </div>
+  </div>
+
+  <!-- 작동/실패 공식 -->
+  <div class="grid cards2">
+    <div class="card">
+      <h2>✅ 작동하는 공식 (엔진)</h2>
+      <div class="formula"><span class="ok">●</span><div><b>훅</b> 구체 현장 장면·제도 시의성·심리 공감 <span class="muted">(#26·#29·#30·#32)</span></div></div>
+      <div class="formula"><span class="ok">●</span><div><b>CTA</b> 4지선다/단계특정형(“①시간 ②비용 ③방법 ④자신감”)</div></div>
+      <div class="formula"><span class="ok">●</span><div><b>주제</b> 공감/제도가 주연, 자격은 ‘닻’ 한 줄</div></div>
+      <div class="formula"><span class="ok">●</span><div><b>포맷</b> 릴스(평균 62.9)·첫 3초 시각 훅 = 도달</div></div>
+    </div>
+    <div class="card">
+      <h2>🔴 죽이는 공식 (저성과)</h2>
+      <div class="formula"><span class="no">●</span><div><b>훅</b> 빈칸/추상·자기소개·개념 정의 <span class="muted">(#31·#27·#33)</span></div></div>
+      <div class="formula"><span class="no">●</span><div><b>CTA</b> 서술형(“상황만 적어주세요”) → 진입장벽↑</div></div>
+      <div class="formula"><span class="no">●</span><div><b>주제</b> 자격 안내·개념 나열이 주연</div></div>
+      <div class="formula"><span class="no">●</span><div><b>포맷</b> Sidecar/이미지(평균 12.7)·기관 근황</div></div>
+    </div>
+  </div>
+
+  <!-- 성과 테이블 -->
+  <div class="card" style="margin-bottom:14px">
+    <h2>최근 게시물 성과 — # 옆에 주제 표기</h2>
+    <div style="overflow:auto">
+    <table>
+      <thead><tr><th>게시물</th><th>날짜</th><th>유형</th><th class="num">좋아요</th><th class="num">댓글</th><th class="num">재생</th><th class="num">팔로워↑</th><th>평가</th></tr></thead>
+      <tbody>
+        <tr><td><b>#30</b> <span class="topic">행동중재 제도 시의성(“요즘 왜 다들 준비”)</span></td><td>06-03</td><td>릴스</td><td class="num">415</td><td class="num"><b>967</b></td><td class="num">77,926</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill fire">🔥 댓글1위</span></td></tr>
+        <tr><td><b>#26</b> <span class="topic">도전행동 + 법 개정 (바이럴)</span></td><td>05-19</td><td>릴스</td><td class="num"><b>922</b></td><td class="num">154</td><td class="num">170,104</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill fire">🔥 바이럴</span></td></tr>
+        <tr><td><b>#29</b> <span class="topic">슈퍼비전 “특수교사인데 받을 수 있나요?”</span></td><td>05-30</td><td>릴스</td><td class="num">242</td><td class="num">236</td><td class="num">43,142</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill fire">🔥 2위</span></td></tr>
+        <tr><td><b>#28</b> <span class="topic">법 통과·자격기준 미정 (긴박감)</span></td><td>05-28</td><td>릴스</td><td class="num">113</td><td class="num">61</td><td class="num">19,049</td><td class="num"><b style="color:#22a06b">+18</b></td><td><span class="pill green">🟢 양호</span></td></tr>
+        <tr><td><b>#32</b> <span class="topic">미룸 심리 “난 안 될 것 같아” (4지선다✓)</span></td><td>06-11</td><td>릴스</td><td class="num">67</td><td class="num">74</td><td class="num">11,750</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill green">🟢 4지선다✓</span></td></tr>
+        <tr><td><b>#33</b> <span class="topic">FBA·ABC·BIP 개념 (슬라이드)</span></td><td>06-15</td><td>Sidecar</td><td class="num">101</td><td class="num">3</td><td class="num">–</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill amber">🟡 댓글정체</span></td></tr>
+        <tr><td><b>#27</b> <span class="topic">코스워크 270h 정보 나열</span></td><td>05-25</td><td>릴스</td><td class="num">18</td><td class="num">1</td><td class="num">8,466</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill amber">🟡 정보형</span></td></tr>
+        <tr><td><b>#31</b> <span class="topic">문제행동 4기능 (빈칸훅+서술CTA)</span></td><td>06-08</td><td>릴스</td><td class="num">15</td><td class="num">0</td><td class="num">3,390</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill red">🔴 폐기</span></td></tr>
+        <tr><td><b>#34</b> <span class="topic">코호트 3기 그룹 슈퍼비전 후기</span></td><td>06-16</td><td>Sidecar</td><td class="num">9</td><td class="num">0</td><td class="num">–</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill red">🔴 기관근황</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note"># = 발행 순서 번호(높을수록 최신). <b>팔로워↑</b> = 그 게시물로 늘어난 팔로우 수 — 인스타 <b>앱 인사이트에만</b> 있어 Apify로는 수집 불가(‘앱확인’). 앱에서 확인해 알려주면 채워 넣습니다. (#28만 5/30 수동 확인 = +18) · 공감/제도+4지선다(#30·#29·#32)는 댓글 폭발, 정보형·기관근황(#33·#27·#31·#34)은 댓글 0~3.</div>
+  </div>
+
+  <!-- 발행 캘린더 (펼치기) -->
+  <div class="card" style="margin-bottom:14px">
+    <h2>🗓 발행 예정 캘린더 — 클릭하면 캡션/내용이 펼쳐집니다</h2>
+
+    <details class="acc" open>
+      <summary><span class="when">6/20 토</span><span class="tag">제도</span><span>서울교육청–고려대 PBS 석사 (권위 편승) · <b>오늘 13시</b></span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body">
+        <div><span class="k2">훅:</span> “서울시교육청이 교사를 ‘대학원 석사’까지 보내기 시작했어요.”</div>
+        <div><span class="k2">CTA(4지선다):</span> ① 관심만 ② 알아보는 중 ③ 준비 시작 ④ 이미 하는 중</div>
+        <div><span class="k2">캡션:</span><div class="cap">서울시교육청이 교사를 '대학원 석사'까지 보내기 시작했어요.
+
+행동중재, 이제 '하면 좋은 것'이 아니라 '현장의 기본'이 되는 신호예요.
+
+✅ 교육청 × 고려대 = 긍정적 행동지원(PBS) 전공 석사 (9월 개강, 5학기 야간)
+✅ 매년 교원 10명 선발·교육비 지원 — 행동중재 전문성을 진지하게 본다는 신호
+✅ 근데 길이 석사뿐? PBS의 뿌리는 ABA — 국제 ABA 자격은 휴직 없이 현직 유지하며 가능
+
+행동중재 전문성, 지금 당신은 어디쯤인가요?
+① 관심만 ② 알아보는 중 ③ 준비 시작 ④ 이미 하는 중
+번호로 댓글 남겨주세요 👇
+
+#특수교사 #행동중재 #PBS #ABA자격증 #긍정적행동지원</div></div>
+        <div class="note">⚠️ PBS=긍정적행동지원(법정 ‘행동중재전문가’와 구분)·고려대 비하 금지·선발/취업 보장 표현 금지. (초안: drafts/draft_20260620_PBS.md)</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="when">6/23 화</span><span class="tag">반박</span><span>“ABA, 자폐 아이한테만 쓰는 거 아니에요?”</span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body">
+        <div><span class="k2">훅:</span> “‘ABA요? 그거 자폐 아이한테만 쓰는 거 아니에요?’ — 이건 절반만 맞아요.”</div>
+        <div><span class="k2">CTA(4지선다):</span> ① 도전행동 ② 의사소통 ③ 학습·과제 ④ 일상 습관</div>
+        <div><span class="k2">캡션:</span><div class="cap">"ABA요? 그거 자폐 아이한테만 쓰는 거 아니에요?"
+
+현장에서 정말 자주 듣는 말인데 — 이건 절반만 맞아요.
+ABA는 특정 진단의 '치료법'이 아니라, 행동이 왜 일어나는지를 다루는 '원리'거든요.
+
+✅ ADHD·발달지연·정서행동·습관까지 — 모든 행동엔 '기능'이 있다
+✅ 그래서 '자폐 전용'이 아니라 행동을 다루는 누구에게나 쓰인다
+✅ 도전행동만? 의사소통·과제 참여·일상 습관까지 전부 ABA의 영역
+
+당신은 ABA를 어디에 가장 쓰고 싶나요?
+① 도전행동 ② 의사소통 ③ 학습·과제 ④ 일상 습관
+번호로 댓글 남겨주세요 👇
+
+#ABA #특수교사 #언어재활사 #발달지연 #행동중재</div></div>
+        <div class="note">초안: drafts/draft_ABA반박형.md</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="when">6/26 금</span><span class="tag">자료</span><span>🎁 도전행동 체크리스트 무료 배부 (참여게이트)</span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body">
+        <div>국내 3계정 교차검증된 <b>최강 좋아요·댓글 레버</b>(@didisam·@spedpo·@_setup). “댓글 ‘자료’ → 자동 DM 링크”(ManyChat) 모델.</div>
+        <div class="note">⬜ 자료집(도전행동 ABC 기록지+4기능 치트시트) 제작 후 발행. 릴스+구체 현장 장면 훅+참여게이트 CTA 필수(#33 슬라이드 실패 교훈).</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="when">6/28 일</span><span class="tag">전환</span><span>합격수기 스토리텔링</span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body"><div>단순 모집공지는 #19처럼 정체 → <b>합격자 스토리(가상 인물 형식 가능)</b>로 전환형 설계.</div><div class="note">⬜ 초안 미작성.</div></div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="when">7/1 수</span><span class="tag">공감</span><span>여름방학 “준비 골든타임”</span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body"><div>훅: “또 ‘이번 방학엔 시작해야지’ 하고 흘려보내려는 거 아니죠?” + 4지선다(코스워크/필드워크/시험/미정).</div><div class="note">⬜ 초안 미작성.</div></div>
+    </details>
+
+    <div class="note">와일드카드: 행동중재전문가 <b>시행령 자격기준</b> 발표 시 즉시 끼워넣기 (현재 미정 · 모법 2026.6.2 공포·2027.6.2 시행).</div>
+  </div>
+
+  <!-- 백로그 칸반 -->
+  <div class="card" style="margin-bottom:14px">
+    <h2>🗂 콘텐츠 백로그 칸반</h2>
+    <div class="kanban">
+      <div class="kcol">
+        <h3><span>📥 아이디어</span><span class="muted">대기</span></h3>
+        <div class="kitem"><span class="kdot" style="background:#f59e0b"></span>🎁 무료 체크리스트 배부<div class="m">자료집 제작 후 · 최강 레버</div></div>
+        <div class="kitem"><span class="kdot" style="background:#ec4899"></span>합격수기 스토리텔링<div class="m">전환형</div></div>
+        <div class="kitem"><span class="kdot" style="background:#6c5ce7"></span>여름방학 준비 골든타임<div class="m">시즌 공감</div></div>
+        <div class="kitem"><span class="kdot" style="background:#06b6a4"></span>QBA 필드워크 1,500→2,000h<div class="m">긴박감</div></div>
+        <div class="kitem"><span class="kdot" style="background:#9ca3af"></span>시행령 자격기준 (대기)<div class="m">발표 시 최우선</div></div>
+      </div>
+      <div class="kcol">
+        <h3><span>✍️ 초안 완료</span><span class="muted">발행 대기</span></h3>
+        <div class="kitem"><span class="kdot" style="background:#22a06b"></span>PBS 석사 제도<div class="m">6/20 · draft_20260620_PBS</div></div>
+        <div class="kitem"><span class="kdot" style="background:#22a06b"></span>ABA 자폐만? 반박<div class="m">6/23 · draft_ABA반박형</div></div>
+      </div>
+      <div class="kcol">
+        <h3><span>✅ 발행 완료(최근)</span><span class="muted">모니터링</span></h3>
+        <div class="kitem">#34 코호트 후기 <span class="pill red">9/0</span><div class="m">6/16 · 기관근황</div></div>
+        <div class="kitem">#33 FBA·BIP 개념 <span class="pill amber">101/3</span><div class="m">6/15 · Sidecar</div></div>
+        <div class="kitem">#32 미룸 심리 <span class="pill green">67/74</span><div class="m">6/11 · 4지선다✓</div></div>
+        <div class="kitem">#30 제도 입문 <span class="pill fire">415/967</span><div class="m">6/3 · 댓글1위</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 경쟁사 비교 + 미해결 -->
+  <div class="grid cols">
+    <div class="card">
+      <h2>🥊 경쟁사 인기 게시물 — 어떤 글이 어떤 효과 (클릭 = 게시물 보기 ↗)</h2>
+
+      <a class="ccard" href="https://www.instagram.com/p/DZaBxANiYTd/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@mimi2hearts_</span><span class="cc-stat">❤️1,655 💬78 · <span class="b-use">톤 이식</span></span></div>
+        <div class="cc-title">“행동을 바꾸기보다, 그 행동의 ‘이유’를 알아가는 과정”</div>
+        <div class="cc-eff"><b>효과:</b> 부모 감정 서사 + “먼저 걸어간 분들 댓글 남겨주세요” = 최대 바이럴. 따뜻한 톤·열린 초대.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DYWktYmkiyS/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@didisam_aba</span><span class="cc-stat">💬164 · <span class="b-use">이식</span></span></div>
+        <div class="cc-title">🎁 감정수업 자료 무료배부 — “댓글에 ‘감정’ → DM 전송”</div>
+        <div class="cc-eff"><b>효과:</b> 자료배부+참여게이트 = 국내 최강 댓글 레버. → 우리 무료배포(6/26) 모델 원본.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DY563EOmbuq/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@four4rabbit</span><span class="cc-stat">❤️368 💬63 · <span class="b-use">CTA 이식</span></span></div>
+        <div class="cc-title">육아툰 — “우리 아이의 사랑표현은 어떤 모습인가요? 댓글로”</div>
+        <div class="cc-eff"><b>효과:</b> 따뜻한 비주얼 + ‘내 경험 자랑’ 열린 질문 CTA → 댓글 폭발. 우리 4지선다와 결 같음.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DY4dTNcRyD8/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@my_rainbowbaby_girl</span><span class="cc-stat">▶9,306 · <span class="b-use">이식</span></span></div>
+        <div class="cc-title">“고기능 자폐 수업태도 2유형 — 당신 아이는 어떤 유형?”</div>
+        <div class="cc-eff"><b>효과:</b> 유형분류+자기선택 포맷 → 재생 최고. 우리 4지선다 CTA와 궁합.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DZFefvfSx2N/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@didisam_aba</span><span class="cc-stat">❤️27 💬1 · <span class="b-anti">반면교사</span></span></div>
+        <div class="cc-title">“도망가는 아이” ABA 중재 사례(토큰·반응차단) 스토리</div>
+        <div class="cc-eff"><b>효과:</b> 전문가 1인칭 사례 = 저조. 독자 경험을 초대하지 않으면 댓글 안 붙음.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/_setup/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@_setup</span><span class="cc-stat">❤️116 💬1 · <span class="b-anti">반면교사</span></span></div>
+        <div class="cc-title">다문화 학생 특수교육 선별도구 개발 공지</div>
+        <div class="cc-eff"><b>효과:</b> ‘실용 도구’는 좋아요 레버지만 공지로 끝내 댓글 0. → 우리는 참여게이트로 전환.</div>
+        <span class="cc-go">계정 보기 ↗</span>
+      </a>
+
+      <div class="note">패턴 정리 — <b>이식</b>: ①부모 감정서사+열린 초대(mimi 1,655) ②자료배부+참여게이트(didisam 164) ③비주얼+자기경험 질문(four4rabbit) ④유형분류+자기선택(rainbowbaby). <b>반면교사</b>: 1인칭 전문가 사례·실용도구 공지형 = 댓글 0. 이 패널은 매일 자동 갱신(신규 인기글 교체).</div>
+    </div>
+    <div class="card">
+      <h2>⚠️ 미해결 액션</h2>
+      <div style="font-size:12.8px;padding:7px 0;border-bottom:1px dashed var(--line)">🔴 <b>6/17 무료배포 릴스</b> 미발행 (최강 레버)</div>
+      <div style="font-size:12.8px;padding:7px 0;border-bottom:1px dashed var(--line)">🟡 <b>캘린더 권한 1회 승인</b> (spectrumhub-daily “지금 실행”)</div>
+      <h2 style="margin-top:12px">🧭 표준 가드</h2>
+      <div class="note" style="margin-top:0">제도=<b>행동중재전문가</b> / 자격=<b>행동분석(ABA) 자격</b> / 행동발달=브랜드톤만. 취업·채용·선발 보장 표현 금지. 본문 외부링크 금지(고정댓글만).</div>
+    </div>
+  </div>
+
+  <div class="foot">🤖 최근 작업(2026-06-20): 종합 성과·경쟁사 분석 + 시행령 발표 조사(멀티에이전트) · PBS/반박형 초안 · 전송방식 캘린더 전환 · 플랜 재정비 · 대시보드 v2. &nbsp;|&nbsp; 매일 자동 갱신 + “대시보드 업데이트해줘”로 즉시 갱신.</div>
+
+</div>
+<script>
+(function(){
+  // 팔로워 추이
+  var f=document.getElementById('foll');
+  var fs=[{d:'5/31',v:2249},{d:'6/20',v:3348}];
+  new Chart(f,{type:'line',
+    data:{labels:fs.map(x=>x.d),datasets:[{label:'총 팔로워',data:fs.map(x=>x.v),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.12)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:'#6c5ce7'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{
+      label:c=>' 총 '+c.parsed.y.toLocaleString()+'명',
+      afterLabel:c=>{var i=c.dataIndex; if(i>0){var d=fs[i].v-fs[i-1].v; return ' 직전 대비 '+(d>=0?'+':'')+d.toLocaleString()+'명';} return '';}
+    }}},
+      scales:{y:{suggestedMin:2200,suggestedMax:3500,ticks:{font:{size:10},callback:v=>v.toLocaleString()}},x:{ticks:{font:{size:10}}}}}
+  });
+  // 주제 믹스
+  var m=document.getElementById('mix');
+  var data=[{l:'현장 공감/심리',v:30,c:'#6c5ce7'},{l:'제도 시의성',v:25,c:'#06b6a4'},{l:'확산(반박/비교)',v:15,c:'#3b82f6'},{l:'자료배부',v:15,c:'#f59e0b'},{l:'전환(합격수기)',v:10,c:'#ec4899'},{l:'정보형',v:5,c:'#9ca3af'}];
+  new Chart(m,{type:'doughnut',
+    data:{labels:data.map(d=>d.l),datasets:[{data:data.map(d=>d.v),backgroundColor:data.map(d=>d.c),borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+' '+c.parsed+'%'}}}}
+  });
+  document.getElementById('mixLegend').innerHTML=data.map(d=>'<span><i class="sw" style="background:'+d.c+'"></i>'+d.l+' '+d.v+'%</span>').join('');
+})();
+</script>
+</body>
+</html>
