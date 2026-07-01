@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>스펙트럼허브 인스타 대시보드</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{ color-scheme: light;
+  --bg:#f6f7fb; --card:#ffffff; --ink:#1c2230; --sub:#6b7280; --line:#e6e8f0;
+  --brand:#6c5ce7; --teal:#06b6a4; --amber:#f59e0b; --red:#ef4444; --green:#22a06b;
+  --fire:#ff5a36; --shadow:0 1px 3px rgba(20,24,40,.06),0 6px 20px rgba(20,24,40,.05);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;line-height:1.5;padding:20px}
+.wrap{max-width:1100px;margin:0 auto}
+header.top{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:14px}
+h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.3px}
+.muted{color:var(--sub);font-size:12.5px}
+.grid{display:grid;gap:14px;margin-bottom:14px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.cards2{grid-template-columns:1fr 1fr}
+.cols{grid-template-columns:1.4fr .6fr}
+@media(max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}.cards2,.cols{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow)}
+.card h2{font-size:13px;margin:0 0 10px;color:#374151}
+.kpi .v{font-size:26px;font-weight:800;letter-spacing:-.5px}
+.kpi .l{font-size:12px;color:var(--sub);margin-top:2px}
+.kpi .s{font-size:11.5px;color:var(--teal);margin-top:3px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--sub);font-weight:600;font-size:11.5px;white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.topic{font-size:12px}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.fire{background:#fff0ec;color:var(--fire)} .green{background:#e7f6ef;color:var(--green)}
+.amber{background:#fff7e6;color:#b4790c} .red{background:#fdecec;color:var(--red)}
+.formula{display:flex;gap:8px;align-items:flex-start;font-size:12.7px;margin:6px 0}
+.ok{color:var(--green)} .no{color:var(--red)}
+.legend{font-size:11.5px;color:var(--sub);margin-top:8px;display:flex;flex-wrap:wrap;gap:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chartbox{position:relative;height:200px}
+.note{font-size:11.5px;color:var(--sub);margin-top:10px}
+.foot{margin:16px 2px 4px;font-size:11.5px;color:var(--sub)}
+.hl{background:#fff7e6;border:1px solid #ffe2ad;color:#7a5200;border-radius:10px;padding:10px 12px;font-size:12.7px;margin-bottom:14px}
+b.k{color:var(--brand)}
+/* accordion */
+.acc{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.acc>summary{list-style:none;cursor:pointer;padding:10px 12px;display:flex;gap:10px;align-items:center;font-size:12.8px}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary .when{flex:0 0 78px;font-weight:700;color:#374151}
+.acc>summary .tag{flex:0 0 auto;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:6px;background:#eef0fb;color:var(--brand)}
+.acc>summary .chev{margin-left:auto;color:var(--sub);font-size:11px}
+.acc[open]>summary{background:#fafbff;border-bottom:1px solid var(--line)}
+.acc .body{padding:11px 13px;font-size:12.4px;background:#fff}
+.acc .body .cap{white-space:pre-wrap;background:#f8f9fc;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:6px;color:#2a3040;max-height:230px;overflow:auto}
+.k2{font-weight:700;color:#374151}
+/* kanban */
+.kanban{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:860px){.kanban{grid-template-columns:1fr}}
+.kcol{background:#fafbff;border:1px solid var(--line);border-radius:10px;padding:9px}
+.kcol h3{font-size:11.5px;margin:2px 4px 8px;color:#4b5563;display:flex;justify-content:space-between}
+.kitem{background:#fff;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:11.8px;margin-bottom:7px;box-shadow:0 1px 2px rgba(20,24,40,.04)}
+.kitem .m{color:var(--sub);font-size:10.5px;margin-top:2px}
+/* competitor post cards */
+.ccard{display:block;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px;background:#fff;transition:.15s}
+.ccard:hover{border-color:var(--brand);box-shadow:0 2px 10px rgba(108,92,231,.12);transform:translateY(-1px)}
+.cc-top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11.5px}
+.cc-acct{font-weight:800;color:var(--brand)}
+.cc-stat{color:var(--sub);font-variant-numeric:tabular-nums}
+.cc-title{font-size:12.6px;font-weight:600;margin:3px 0}
+.cc-eff{font-size:11.6px;color:#4b5563}
+.cc-go{display:inline-block;margin-top:5px;font-size:11px;font-weight:700;color:var(--brand)}
+.b-use{background:#e7f6ef;color:var(--green);border-radius:5px;padding:0 5px;font-size:10px;font-weight:700}
+.b-anti{background:#fdecec;color:var(--red);border-radius:5px;padding:0 5px;font-size:10px;font-weight:700}
+.kdot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>📊 스펙트럼허브 인스타 대시보드</h1>
+      <div class="muted">@official_spectrumhub · 기준일 <b>2026-07-02 (목) · 📊 브리핑</b> · 데이터: history.md 실측(Apify) · 자동 일일 갱신</div>
+    </div>
+    <div class="muted">엔진: <b class="k">공감/제도 훅 + 4지선다 CTA + 릴스</b></div>
+  </header>
+
+  <div class="grid kpis">
+    <div class="card kpi"><div class="v">4,783</div><div class="l">총 팔로워 (7/2 실측)</div><div class="s">7/1(4,725) 대비 +58명 · 안정적 우상향</div></div>
+    <div class="card kpi"><div class="v">38</div><div class="l">누적 발행 게시물</div><div class="s">신규 발행 없음 (비발행일·브리핑)</div></div>
+    <div class="card kpi"><div class="v">3,499</div><div class="l">최고 댓글 (#37 자료배부 게이트)</div><div class="s">역대 1위 지속 · 7일차 롱테일(+112)</div></div>
+    <div class="card kpi"><div class="v">922</div><div class="l">최고 좋아요 (#26 도전행동+법)</div><div class="s">바이럴 · 재생 17만</div></div>
+  </div>
+
+  <div class="hl">📊 <b>7/2 브리핑</b>(비발행일) — 팔로워 <b>4,783(+58)</b> · #37 자료배부 댓글 <b>3,499</b> 역대1위 지속(7일차·+112)·재생 회복 · #35 PBS 12일차 141/198 롱테일 · #38 구조화된 교수(Sidecar) 33/0 → 정보나열형 댓글0 <b>4연속</b>(#33·#34·#38). &nbsp;|&nbsp; 🔍 @four4rabbit: 키워드 <b>'분석'→DM 공구 게이트 121/💬126</b>(게이트 <b>8번째 교차검증</b>)·방학 유머 '선생님 싫어노래' 187/💬70. &nbsp;|&nbsp; ⚠️ <b>Joon</b>: 자료배부 게이트 릴스 #2(2차 파동)+방학 시즌 결합 · 미발행 누적(합격수기·QBA코스워크·비전공자) 발행 여부 · 7/1 여름방학 릴스 발행 대기 · #37·#35 앱 인사이트 수동확인.</div>
+
+  <!-- 추이 + 주제믹스 -->
+  <div class="grid cards2">
+    <div class="card">
+      <h2>👥 총 팔로워 수 (매일 기록)</h2>
+      <div class="chartbox"><canvas id="foll"></canvas></div>
+      <div class="note">오늘(7/2) 총 <b>4,783명</b> (Apify 실측, 7/1 대비 <b>+58</b> — 안정적 우상향). 6월 한 달 ~2,250 → 4,659(+107%) 폭증 후 7월도 #37 게이트 롱테일 유입 지속. ※ 프로필 미수집일은 직전 기준 유지.</div>
+    </div>
+    <div class="card">
+      <h2>🎯 권장 주제 믹스</h2>
+      <div class="chartbox"><canvas id="mix"></canvas></div>
+      <div class="legend" id="mixLegend"></div>
+    </div>
+  </div>
+
+  <!-- 작동/실패 공식 -->
+  <div class="grid cards2">
+    <div class="card">
+      <h2>✅ 작동하는 공식 (엔진)</h2>
+      <div class="formula"><span class="ok">●</span><div><b>훅</b> 구체 현장 장면·제도 시의성·심리 공감 <span class="muted">(#26·#29·#30·#32·#35)</span></div></div>
+      <div class="formula"><span class="ok">●</span><div><b>CTA</b> 4지선다/단계특정형 — "현재 상황/불안" 질문 (선호·용도 질문보다 강함, #36 교훈)</div></div>
+      <div class="formula"><span class="ok">●</span><div><b>참여게이트</b> 키워드 댓글→DM 자료배부 = 댓글 폭발 <span class="muted">(8계정 교차검증 · 공익·전문성 신뢰가 폭발력 배가)</span></div></div>
+      <div class="formula"><span class="ok">●</span><div><b>포맷</b> 릴스(평균 62.9)·첫 3초 시각 훅 = 도달</div></div>
+      <div class="formula"><span class="ok">●</span><div><b>신발견</b> "행동의 이유" 관점 = 좋아요 레버 (@mimi2hearts 1,752) — 스펙트럼허브 "왜 했나" 프레임 일치</div></div>
+    </div>
+    <div class="card">
+      <h2>🔴 죽이는 공식 (저성과)</h2>
+      <div class="formula"><span class="no">●</span><div><b>훅</b> 빈칸/추상·자기소개·개념 정의 <span class="muted">(#31·#27·#33)</span></div></div>
+      <div class="formula"><span class="no">●</span><div><b>CTA</b> 서술형("상황만 적어주세요")·용도 선호형(#36) → 참여↓</div></div>
+      <div class="formula"><span class="no">●</span><div><b>주제</b> 자격 안내·개념 나열이 주연</div></div>
+      <div class="formula"><span class="no">●</span><div><b>포맷</b> Sidecar/이미지(평균 12.7)·기관 근황</div></div>
+    </div>
+  </div>
+
+  <!-- 성과 테이블 -->
+  <div class="card" style="margin-bottom:14px">
+    <h2>최근 게시물 성과 — # 옆에 주제 표기 (7/2 Apify 실측)</h2>
+    <div style="overflow:auto">
+    <table>
+      <thead><tr><th>게시물</th><th>날짜</th><th>유형</th><th class="num">좋아요</th><th class="num">댓글</th><th class="num">재생</th><th class="num">팔로워↑</th><th>평가</th></tr></thead>
+      <tbody>
+        <tr><td><b>#37</b> <span class="topic">🎁 공식 매뉴얼 자료배부 (키워드 댓글→DM 게이트)</span></td><td>06-26</td><td>릴스</td><td class="num">764</td><td class="num"><b>3,499</b></td><td class="num">20,034</td><td class="num"><b style="color:#22a06b">+297*</b></td><td><span class="pill fire">🔥 댓글 역대1위</span></td></tr>
+        <tr><td><b>#38</b> <span class="topic">구조화된 교수 이해하기 (정보형 carousel)</span></td><td>06-30</td><td>Sidecar</td><td class="num">33</td><td class="num">0</td><td class="num">–</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill red">🔴 정보형 댓글0</span></td></tr>
+        <tr><td><b>#36</b> <span class="topic">ABA 자폐만? 반박형 (용도 CTA)</span></td><td>06-23</td><td>릴스</td><td class="num">33</td><td class="num">22</td><td class="num">1,207</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill amber">🟡 약세지속</span></td></tr>
+        <tr><td><b>#35</b> <span class="topic">서울교육청-고려대 PBS 석사 (권위 편승+4지선다)</span></td><td>06-20</td><td>릴스</td><td class="num">141</td><td class="num"><b>198</b></td><td class="num">12,507</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill fire">🔥 12d 롱테일</span></td></tr>
+        <tr><td><b>#30</b> <span class="topic">행동중재 제도 시의성("요즘 왜 다들 준비")</span></td><td>06-03</td><td>릴스</td><td class="num">415</td><td class="num"><b>967</b></td><td class="num">77,926</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill fire">🔥 댓글1위</span></td></tr>
+        <tr><td><b>#26</b> <span class="topic">도전행동 + 법 개정 (바이럴)</span></td><td>05-19</td><td>릴스</td><td class="num"><b>922</b></td><td class="num">154</td><td class="num">170,104</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill fire">🔥 바이럴</span></td></tr>
+        <tr><td><b>#29</b> <span class="topic">슈퍼비전 "특수교사인데 받을 수 있나요?"</span></td><td>05-30</td><td>릴스</td><td class="num">242</td><td class="num">236</td><td class="num">43,142</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill fire">🔥 2위</span></td></tr>
+        <tr><td><b>#33</b> <span class="topic">FBA·ABC·BIP 개념 (슬라이드)</span></td><td>06-15</td><td>Sidecar</td><td class="num">160</td><td class="num">8</td><td class="num">–</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill amber">🟡 댓글정체</span></td></tr>
+        <tr><td><b>#32</b> <span class="topic">미룸 심리 "난 안 될 것 같아" (4지선다✓)</span></td><td>06-11</td><td>릴스</td><td class="num">69</td><td class="num">89</td><td class="num">13,137</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill green">🟢 4지선다✓</span></td></tr>
+        <tr><td><b>#28</b> <span class="topic">법 통과·자격기준 미정 (긴박감)</span></td><td>05-28</td><td>릴스</td><td class="num">113</td><td class="num">61</td><td class="num">19,049</td><td class="num"><b style="color:#22a06b">+18</b></td><td><span class="pill green">🟢 양호</span></td></tr>
+        <tr><td><b>#34</b> <span class="topic">코호트 3기 그룹 슈퍼비전 후기</span></td><td>06-16</td><td>Sidecar</td><td class="num">17</td><td class="num">0</td><td class="num">–</td><td class="num"><span class="muted">앱확인</span></td><td><span class="pill red">🔴 기관근황</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <div class="note"># = 발행 순서 번호(높을수록 최신). <b>팔로워↑</b> = 그 게시물로 늘어난 팔로우 수 — 인스타 <b>앱 인사이트에만</b> 있어 Apify로는 수집 불가('앱확인'). (*#37 +297은 같은 날 계정 전체 일일 증가분 — 게이트 직접 전환분 추정 / #28만 5/30 수동 확인 = +18) · <b>#37 자료배부+게이트가 댓글 3,499로 역대1위 지속</b>. 공감/제도+4지선다(#30·#29·#32·#35)는 댓글 폭발, 정보형 Sidecar·기관근황(#33·#34·#38)은 댓글 0~8(#38 4연속 댓글0). #36은 용도 선호형 CTA로 약세.</div>
+  </div>
+
+  <!-- 발행 캘린더 (펼치기) -->
+  <div class="card" style="margin-bottom:14px">
+    <h2>🗓 발행 예정 캘린더 — 클릭하면 캡션/내용이 펼쳐집니다</h2>
+
+    <details class="acc" open>
+      <summary><span class="when">6/26 금</span><span class="tag" style="background:#e7f6ef;color:#22a06b">✅ 발행완료 #37</span><span>🎁 자료배부 릴스 — <b>267/💬1,181/15,525 · 팔로워 +297 (역대1위 경신)</b></span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body">
+        <div><span class="k2">훅:</span> "교육청이 만든 '공식 행동중재 매뉴얼', 따로 있는 거 아셨어요?"</div>
+        <div><span class="k2">자료(닻):</span> 국립특수교육원·시도교육청·국립정신건강센터·서울대병원 공식 매뉴얼 + QBA·QASP-S·ABAT 자격 핸드북/양식 한곳 모음🎁</div>
+        <div><span class="k2">CTA(4지선다 현황형 + 게이트):</span> ① 도전행동 중재 ② 위기행동 대처 ③ PBS 사례 ④ 자격 공식양식 → 팔로우+번호 댓글 → 모음 링크 DM</div>
+        <div class="note">✅ 발행: Joon 직접(6/26 19:37) · 키워드 댓글→DM 게이트 4계정 교차검증대로 댓글 1,181 폭발 · 📌 키워드 남긴 분들께 DM 발송 필요</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="when">6/24 수</span><span class="tag">발행 대기</span><span>QBA 코스워크 릴스 — 미발행 누적</span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body">
+        <div><span class="k2">훅:</span> "QBA 코스워크 270시간, 아무 수업이나 들으면 인정 안 됩니다"</div>
+        <div><span class="k2">CTA(4지선다):</span> ① 아직 시작 못 했다 ② 어디서 들어야 하는지 모른다 ③ 이수 중이다 ④ 이미 완료했다</div>
+        <div class="note">✅ 초안: drafts/draft_20260624.md · 팩트체크: qababoard.com 공식 확인 · 발행 우선순위 정리 후 발행 가능</div>
+      </div>
+    </details>
+
+    <details class="acc" open>
+      <summary><span class="when">6/28 일</span><span class="tag" style="background:#fdecec;color:#ef4444">⚠️ 미발행(6/29 확인)</span><span>합격수기 스토리텔링(전환형) — Joon 발행 의향 확인·7월 재배치 검토</span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body">
+        <div><span class="k2">훅(포기심리×자격 반전):</span> "나 같은 사람도… 이런 자격, 될까?" — 3년 차 특수교사의 질문</div>
+        <div><span class="k2">반전(닻):</span> ① 한 번이 아니라 단계(ABAT→QASP-S→QBA) ② 휴직 없이 현직 그대로(코스워크=VOD) ③ 학교업무=필드워크·온라인 슈퍼비전</div>
+        <div><span class="k2">CTA(현황형 4지선다):</span> ① '나도 될까' 망설임 ② 단계 알아보는 중 ③ 시작했는데 막막 ④ 한 칸씩 가는 중</div>
+        <div class="note">✅ 초안: drafts/draft_20260628.md · #29(포기심리+자격 반전 236) 패턴 + #36 교훈(현황형>용도형) · ⚠️ 6/29 04:40 시점 미발행(최신 릴스 #37) → Joon 발행 의향 확인·7월 발행 캘린더 재배치 검토</div>
+      </div>
+    </details>
+
+    <details class="acc" open>
+      <summary><span class="when">7/1 수</span><span class="tag" style="background:#eef0fb;color:#6c5ce7">🔄 초안완료·전송</span><span>여름방학 "준비 골든타임" — 제도 시의성 주연</span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body">
+        <div><span class="k2">훅(시즌+제도):</span> "특수교사 여름방학 = '쉬는 시간'? 학기 중엔 못 하는 딱 한 가지가 있어요" → 2027년 현장이 바뀝니다</div>
+        <div><span class="k2">제도(주연):</span> ① 2027 행동중재전문가 배치 시행 예정(특수교육법 개정) ② 세부 자격기준 '미정' → 흐름 먼저 읽을 구간 ③ 미리 쌓을 전문성=행동분석(ABA)·방학이 골든타임(닻 한 줄)</div>
+        <div><span class="k2">CTA(현황형 4지선다):</span> 이번 여름 어디쯤? ① 관심만 ② 알아보는 중 ③ 준비 시작 ④ 이미 하고 있다</div>
+        <div class="note">✅ 초안: drafts/draft_20260701.md · 6/30 헌법(자격 주연 금지) 준수 — 제도 시의성 주연·자격 닻 한 줄 · 캘린더(07:00) 전문 전송 · 시행령 자격기준 입법예고 추가없음 확인 · Joon 발행 대기</div>
+      </div>
+    </details>
+
+    <details class="acc">
+      <summary><span class="when">6/30 화</span><span class="tag" style="background:#fff7e6;color:#b4790c">⚠️ Joon 자체 발행 #38</span><span>구조화된 교수 이해하기 (Sidecar) — 28/0</span><span class="chev">▼ 펼치기</span></summary>
+      <div class="body">
+        <div><span class="k2">내용:</span> 구조화된 교수 3요소(시간·공간·과제 구조) 정보 carousel + 체크리스트 4문항</div>
+        <div class="note">⚠️ 큐의 합격수기 draft 아님 — Joon 자체 제작 정보형. 7/1 실측 28/0(좋아요O·댓글0). Sidecar 정보형 댓글0 3연속(#33·#34·#38) → 저장/블로그 연계용, 신규 확산엔 릴스+게이트/제도로 분리 권장.</div>
+      </div>
+    </details>
+
+    <div class="note">와일드카드: 행동중재전문가 <b>시행령 자격기준</b> 발표 시 즉시 끼워넣기 (현재 미정 · 모법 2026.6.2 공포·2027.6.2 시행).</div>
+  </div>
+
+  <!-- 백로그 칸반 -->
+  <div class="card" style="margin-bottom:14px">
+    <h2>🗂 콘텐츠 백로그 칸반</h2>
+    <div class="kanban">
+      <div class="kcol">
+        <h3><span>📥 아이디어</span><span class="muted">대기</span></h3>
+        <div class="kitem"><span class="kdot" style="background:#f59e0b"></span>자료배부 게이트 릴스 #2<div class="m">7월초 (#37 2차 파동)</div></div>
+        <div class="kitem"><span class="kdot" style="background:#06b6a4"></span>QBA 필드워크 1,500→2,000h<div class="m">긴박감</div></div>
+        <div class="kitem"><span class="kdot" style="background:#f59e0b"></span>댓글→DM 자동화(ManyChat류)<div class="m">자료배부 발전형</div></div>
+        <div class="kitem"><span class="kdot" style="background:#9ca3af"></span>시행령 자격기준 (대기)<div class="m">발표 시 최우선</div></div>
+      </div>
+      <div class="kcol">
+        <h3><span>✍️ 초안 완료</span><span class="muted">발행 대기</span></h3>
+        <div class="kitem"><span class="kdot" style="background:#6c5ce7"></span>여름방학 골든타임<div class="m">제도 시의성 · draft_20260701 · 캘린더 전송(7/1)</div></div>
+        <div class="kitem"><span class="kdot" style="background:#ef4444"></span>합격수기 스토리텔링<div class="m">전환형 · draft_20260628 · ⚠️ 미발행 · 7월 재배치 검토</div></div>
+        <div class="kitem"><span class="kdot" style="background:#22a06b"></span>QBA 코스워크 릴스<div class="m">미발행 누적 · draft_20260624</div></div>
+        <div class="kitem"><span class="kdot" style="background:#6c5ce7"></span>비전공자 심리공감<div class="m">미발행 누적 · draft_20260625</div></div>
+      </div>
+      <div class="kcol">
+        <h3><span>✅ 발행 완료(최근)</span><span class="muted">모니터링</span></h3>
+        <div class="kitem">#37 🎁 자료배부 게이트 <span class="pill fire">764/3,499 🔥</span><div class="m">6/26 · 댓글 역대1위 지속 · 7일차 롱테일(+112)</div></div>
+        <div class="kitem">#38 구조화된 교수 <span class="pill red">33/0</span><div class="m">6/30 · Sidecar 정보형 댓글0 4연속</div></div>
+        <div class="kitem">#36 ABA 반박형 <span class="pill amber">33/22 🟡</span><div class="m">6/23 · 용도CTA 약세지속</div></div>
+        <div class="kitem">#35 PBS 릴스 <span class="pill fire">141/198 🔥</span><div class="m">6/20 · 12d 롱테일 · 도달 앱확인</div></div>
+        <div class="kitem">#33 FBA·BIP 개념 <span class="pill amber">160/8</span><div class="m">6/15 · Sidecar</div></div>
+        <div class="kitem">#32 미룸 심리 <span class="pill green">69/89</span><div class="m">6/11 · 4지선다✓</div></div>
+        <div class="kitem">#30 제도 입문 <span class="pill fire">415/967</span><div class="m">6/3 · 댓글 롱테일</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 경쟁사 비교 + 미해결 -->
+  <div class="grid cols">
+    <div class="card">
+      <h2>🥊 경쟁사 인기 게시물 — 어떤 글이 어떤 효과 (클릭 = 게시물 보기 ↗)</h2>
+
+      <a class="ccard" href="https://www.instagram.com/p/DaApLAfFEWo/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@my_rainbowbaby_girl</span><span class="cc-stat">❤️125 💬12 · <span class="b-use">시즌 참고</span></span></div>
+        <div class="cc-title">상호작용놀이 챌린지 18기 예고 — 7/1~7/3 모집 (6/25 Sidecar · 7/1 로테이션 수집)</div>
+        <div class="cc-eff"><b>효과:</b> 전자책(크몽)→카페→챌린지 <b>다단계 게이트</b>(IG댓글 12·외부플랫폼 경유). 7월초=게이트 시즌 → 우리 자료배부 게이트 #2(2차 파동) 타이밍 적절. 단 우리 #37(IG댓글→DM 직결, 댓글 3,387)이 <b>IG 알고리즘엔 더 유리</b>. ※감성 1인칭 서사 릴스(562/73)는 부모계정 고유 강점 — 우리는 제도·정보 리드 유지.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DZCpqJZibmA/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@mimi2hearts_</span><span class="cc-stat">❤️960 💬2,241 · <span class="b-use">이식 최우선</span></span></div>
+        <div class="cc-title">"진단 어떻게?" 댓글 '진료' → DM 후기 전송 (6/1 Sidecar)</div>
+        <div class="cc-eff"><b>효과:</b> 키워드 댓글→DM 게이트 = 댓글 <b>2,241 폭발</b>. 4계정 교차검증 결정타. → 오늘 "번호+'체크리스트'→DM" 모델의 원본 검증.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DZ7MqFYpgDU/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@mimi2hearts_</span><span class="cc-stat">❤️1,160 💬61 ▶116,395 · <span class="b-use">톤 참고</span></span></div>
+        <div class="cc-title">"오빠를 사랑하는 방법을 동생은 이미 알고 있었다" 남매 릴스 (6/23)</div>
+        <div class="cc-eff"><b>효과:</b> 남매 사랑 감성 서사 = 최대 바이럴(재생 11.6만). 부모계정 전용 강점 — 전문계정은 '현장 1인칭 공감'으로 변주.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DZaBxANiYTd/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@mimi2hearts_</span><span class="cc-stat">❤️1,752 💬84 · <span class="b-use">철학 일치</span></span></div>
+        <div class="cc-title">"행동을 바꾸기보다 그 행동의 이유를 알아가는 과정" (6/10)</div>
+        <div class="cc-eff"><b>효과:</b> '이유' 관점 = 최고 좋아요(1,752). 스펙트럼허브 "왜 했나" 프레임과 정확히 일치 → 자료배부 캡션에 이미 반영.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DZ2LngUyK0h/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@didisam_aba</span><span class="cc-stat">❤️148 💬460 · <span class="b-use">이식</span></span></div>
+        <div class="cc-title">감정수업 4차시 풀패키지 — 댓글 '감정수업패키지' → DM 링크 (6/21, 6/30 수집)</div>
+        <div class="cc-eff"><b>효과:</b> 키워드 댓글→DM = 댓글 <b>460</b>. 반면 같은 계정 순수 정보글(산만해요 0·중재사례 1)은 댓글 0~1 → 게이트 글만 폭발. <b>7계정째 교차검증</b>(우리 #37 엔진 보편성 재증명).</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DZ7XAM9Ge2M/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@four4rabbit</span><span class="cc-stat">❤️121 💬126 · <span class="b-use">이식(8번째)</span></span></div>
+        <div class="cc-title">[공구] "댓글에 '분석' 남겨주세요" → 무료분석폼+할인코드 DM (6/23 · 7/2 로테이션 수집)</div>
+        <div class="cc-eff"><b>효과:</b> 키워드 댓글→DM 게이트 = 댓글 <b>126</b> — 게이트 레버 <b>8번째 교차검증</b>. 단 <b>상업 공동구매</b> 목적이라 우리 #37(공익 공식자료) 💬3,499와 자릿수 차 → <b>공익·전문성 신뢰가 게이트 폭발력을 배가</b>. 별개로 "선생님 싫어하는 노래"(방학 유머) 187/💬70 → 우리 여름방학 콘텐츠에 시즌 공감 요소 유효.</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <a class="ccard" href="https://www.instagram.com/p/DYg-YEJlK7y/" target="_blank" rel="noopener">
+        <div class="cc-top"><span class="cc-acct">@_setup</span><span class="cc-stat">❤️117 💬1 · <span class="b-anti">반면교사</span></span></div>
+        <div class="cc-title">다문화 특수교육대상자 선별도구 개발 / 사진교육 자료집 (실용·자료 공지, 6/28 수집)</div>
+        <div class="cc-eff"><b>효과:</b> 실용도구·자료집 소재라도 <b>참여게이트 없어 좋아요 ~117 천장·댓글 0~1</b>. 우리 #37(같은 '자료' 소재+게이트=💬2,759)과 정면 대조 → <b>댓글 레버는 소재가 아니라 게이트 설계</b>임을 6계정째 재증명(@didisam·@four4rabbit·@my_rainbowbaby·@mimi2hearts·@spedpo·@_setup).</div>
+        <span class="cc-go">게시물 보기 ↗</span>
+      </a>
+
+      <div class="note">패턴 정리 — <b>이식</b>: ①키워드 댓글→DM 자료배부(mimi2hearts 2,241·didisam 460·four4rabbit 126·rainbowbaby·spedpo·_setup 등 = <b>8계정 교차검증</b>) ②감성 경험 공유 질문·방학 시즌 유머(four4rabbit) ③"행동의 이유" 철학(mimi2hearts 1,752). <b>반면교사</b>: 정보형·공지형 = 댓글 0. 이 패널은 매일 자동 갱신.</div>
+    </div>
+    <div class="card">
+      <h2>⚠️ 미해결 액션</h2>
+      <div style="font-size:12.8px;padding:7px 0;border-bottom:1px dashed var(--line)">🔴 <b>합격수기 릴스 미발행</b>(draft_20260628) — 캘린더 전송했으나 미발행 누적. Joon 발행 의향 확인·7월 재배치 검토</div>
+      <div style="font-size:12.8px;padding:7px 0;border-bottom:1px dashed var(--line)">🟢 <b>7월초 자료배부 게이트 릴스 #2</b> — #37 2차 파동 설계(@my_rainbowbaby도 7/1~7/3 챌린지 게이트 시즌). 자료실 큐레이션 후 발행</div>
+      <div style="font-size:12.8px;padding:7px 0;border-bottom:1px dashed var(--line)">🔴 <b>#37 게이트 이행</b> — 댓글(3,499)에 키워드 남긴 분들께 모음 링크 DM 발송(약속 이행 필수)</div>
+      <div style="font-size:12.8px;padding:7px 0;border-bottom:1px dashed var(--line)">🟡 <b>#37·#35 앱 인사이트</b> — 도달·저장·공유 수동 확인(알고리즘 픽 판정 / #37 저장 높을 것 추정)</div>
+      <div style="font-size:12.8px;padding:7px 0;border-bottom:1px dashed var(--line)">🟠 <b>QBA 코스워크·6/25 초안</b> 미발행 누적 — 발행 우선순위 정리 필요</div>
+      <div style="font-size:12.8px;padding:7px 0;border-bottom:1px dashed var(--line)">🟣 <b>공개본(Vercel) 수동 갱신 필요</b> — 무인 실행으로 GitHub 커밋 미수행. "공유본 갱신해줘"로 처리</div>
+      <h2 style="margin-top:12px">🧭 표준 가드</h2>
+      <div class="note" style="margin-top:0">제도=<b>행동중재전문가</b> / 자격=<b>행동분석(ABA) 자격</b> / 행동발달=브랜드톤만. 취업·채용·선발 보장 표현 금지. 본문 외부링크 금지(고정댓글만).</div>
+    </div>
+  </div>
+
+  <div class="foot">🤖 자동 갱신(2026-07-02 · 📊 브리핑): 팔로워 <b>4,783(+58)</b> · <b>#37 자료배부 댓글 3,499 역대1위 지속(7일차·+112)·재생 회복</b> · #35 PBS 12d 141/198 롱테일 · #38 구조화된 교수(Sidecar) 33/0 정보나열형 댓글0 4연속 · @four4rabbit 키워드 '분석'→DM 공구게이트 121/💬126(게이트 8번째 교차검증)·방학 유머 187/💬70 · 대시보드 v12. &nbsp;|&nbsp; 매일 자동 갱신 + "대시보드 업데이트해줘"로 즉시 갱신.</div>
+
+</div>
+<script>
+(function(){
+  // 팔로워 추이
+  var f=document.getElementById('foll');
+  var fs=[{d:'5/31',v:2249},{d:'6/20',v:3348},{d:'6/23',v:3457},{d:'6/26',v:3495},{d:'6/27',v:3792},{d:'6/28',v:4415},{d:'6/29',v:4569},{d:'6/30',v:4659},{d:'7/1',v:4725},{d:'7/2',v:4783}];
+  new Chart(f,{type:'line',
+    data:{labels:fs.map(x=>x.d),datasets:[{label:'총 팔로워',data:fs.map(x=>x.v),borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.12)',fill:true,tension:.3,pointRadius:5,pointBackgroundColor:'#6c5ce7'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{
+      label:c=>' 총 '+c.parsed.y.toLocaleString()+'명',
+      afterLabel:c=>{var i=c.dataIndex; if(i>0){var d=fs[i].v-fs[i-1].v; return ' 직전 대비 '+(d>=0?'+':'')+d.toLocaleString()+'명';} return '';}
+    }}},
+      scales:{y:{suggestedMin:2000,suggestedMax:5000,ticks:{font:{size:10},callback:v=>v.toLocaleString()}},x:{ticks:{font:{size:10}}}}}
+  });
+  // 주제 믹스
+  var m=document.getElementById('mix');
+  var data=[{l:'현장 공감/심리',v:30,c:'#6c5ce7'},{l:'제도 시의성',v:25,c:'#06b6a4'},{l:'확산(반박/비교)',v:15,c:'#3b82f6'},{l:'자료배부',v:15,c:'#f59e0b'},{l:'전환(합격수기)',v:10,c:'#ec4899'},{l:'정보형',v:5,c:'#9ca3af'}];
+  new Chart(m,{type:'doughnut',
+    data:{labels:data.map(d=>d.l),datasets:[{data:data.map(d=>d.v),backgroundColor:data.map(d=>d.c),borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'58%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.label+' '+c.parsed+'%'}}}}
+  });
+  document.getElementById('mixLegend').innerHTML=data.map(d=>'<span><i class="sw" style="background:'+d.c+'"></i>'+d.l+' '+d.v+'%</span>').join('');
+})();
+</script>
+</body>
+</html>
